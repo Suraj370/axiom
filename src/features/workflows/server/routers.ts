@@ -92,14 +92,19 @@ export const workflowsRouter = createTRPCRouter({
         }),
       ]);
 
+      const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+      const hasNextPage = page < totalPages;
+      const hasPrevPage = page > 1;
+
       return {
         items,
         pagination: {
           page,
           pageSize,
           totalCount,
-          totalPages: Math.ceil(totalCount / pageSize),
-          hasNextPage: page * pageSize < totalCount,
+          totalPages,
+          hasNextPage,
+          hasPrevPage,
         },
       };
     }),
