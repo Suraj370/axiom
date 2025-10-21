@@ -1,38 +1,42 @@
-"use client";
-import { Button } from "@/components/ui/button";
-// import { caller } from "@/trpc/server";
+'use client'
 
-import { authClient } from "@/lib/auth-client";
-import { createAuthClient } from "better-auth/react";
+import { authClient } from '@/lib/auth-client'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-export default  function Home() {
- const {
-        data: session,
-        isPending, //loading state
-        error, //error object 
-        refetch //refetch the session
-    } = authClient.useSession()
-  const signin = async () => {
-    // client-side usage
-    await authClient.signIn.social({
-      provider: "google", // or any other provider id
-    });
-  };
+export default function Home() {
+  const router = useRouter()
+  const { data: session, isPending, error } = authClient.useSession()
 
+  if (isPending) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <p>Loading...</p>
+      </main>
+    )
+  }
 
   return (
-    <main className="min-h-screen min-w-screen flex items-center justify-center flex-col gap-y-6">
-      <h1>Home!</h1>
+    <main className="min-h-screen flex items-center justify-center flex-col gap-y-6">
+      <h1 className="text-2xl font-bold">Welcome to the Platform</h1>
 
-        {session && (
-          <div>
-            <p>Welcome, {session.user?.name}!</p>
-            <Button onClick={() => authClient.signOut()}>Sign out</Button>
-          </div>
-        )}
-        {!session && (
-            <Button onClick={signin}>Sign in with Google</Button>
-        )}
+      {!session ? (
+        <div className="space-y-4 text-center">
+          <p>You’re not logged in.</p>
+          <Link href="/login">
+            <Button variant="default">Go to Login</Button>
+          </Link>
+        </div>
+      ) : (
+        <div className="space-y-4 text-center">
+          <p>Logged in as <strong>{session.user?.email}</strong></p>
+          <p>Name: <strong>{session.user?.name}</strong></p>
+          <Button onClick={() => router.push('/workflows')}>
+            Go to Workflows
+          </Button>
+        </div>
+      )}
     </main>
-  );
+  )
 }
