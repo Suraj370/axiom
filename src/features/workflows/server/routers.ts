@@ -1,12 +1,12 @@
-import { generateSlug } from "random-word-slugs";
-import {prisma} from "@/lib/db";
+import { PAGINATION } from "@/constants/pagination";
+import { prisma } from "@/lib/db";
 import {
   createTRPCRouter,
   premiumProcedure,
   protectedProcedure,
 } from "@/trpc/init";
+import { generateSlug } from "random-word-slugs";
 import { z } from "zod";
-import { PAGINATION } from "@/constants/pagination";
 
 const idSchema = z.object({ id: z.string() });
 const updateNameSchema = z.object({
@@ -57,7 +57,7 @@ export const workflowsRouter = createTRPCRouter({
     ),
 
   getOne: protectedProcedure.input(idSchema).query(({ ctx, input }) =>
-    prisma.workflow.findUnique({
+    prisma.workflow.findUniqueOrThrow({
       where: {
         id: input.id,
         userId: ctx.auth.user.id,

@@ -17,12 +17,11 @@ import {
   useSuspenseWorkflows,
 } from "../hooks/use-workflows";
 import { useUpgradeModal } from "@/hooks/use-upgrade-modal";
-import {formatDistanceToNow} from 'date-fns'
+import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 import { useWorkflowsParams } from "../hooks/use-workflows-params";
 import { useEntitySearch } from "@/hooks/use-entity-search";
 import type { Workflow } from "@/generated/prisma";
-import { DropdownMenu } from "@/components/ui/dropdown-menu";
 import { WorkflowIcon } from "lucide-react";
 
 export const WorkflowSearch = () => {
@@ -88,10 +87,6 @@ export const WorkflowPagination = () => {
   const workflows = useSuspenseWorkflows();
   const [params, setParams] = useWorkflowsParams();
 
-  const handlePageChange = (newPage: number) => {
-    setParams({ ...params, page: newPage });
-  };
-
   return (
     <EntityPagination
       disabled={workflows.isFetching}
@@ -149,16 +144,21 @@ export const WorkflowsEmpty = () => {
 };
 
 export const WorkflowsItem = ({ workflow }: { workflow: Workflow }) => {
-
   const removeWokflow = useRemoveWorkflow();
   const handleRemove = () => {
     removeWokflow.mutate({ id: workflow.id });
-  }
+  };
   return (
     <EntityItem
       href={`/workflows/${workflow.id}`}
       title={workflow.name}
-      subtitle={<>Updated {formatDistanceToNow(workflow.updatedAt, { addSuffix: true })} &bull; Created {formatDistanceToNow(workflow.createdAt, { addSuffix: true })}</>}
+      subtitle={
+        <>
+          Updated {formatDistanceToNow(workflow.updatedAt, { addSuffix: true })}{" "}
+          &bull; Created{" "}
+          {formatDistanceToNow(workflow.createdAt, { addSuffix: true })}
+        </>
+      }
       image={
         <div className="size-8 flex items-center justify-center">
           <WorkflowIcon className=" size-5 text-muted-foreground " />
