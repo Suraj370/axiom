@@ -12,8 +12,8 @@ import {
   Editor,
   EditorError,
   EditorLoading,
-} from "@/features/eidtor/components/editor";
-import { EditorHeader } from "@/features/eidtor/components/editor-header";
+} from "@/features/editor/components/editor";
+import { EditorHeader } from "@/features/editor/components/editor-header";
 
 interface PageProps {
   params: Promise<{ workflowId: string }>;
