@@ -1,5 +1,5 @@
 import { generateSlug } from "random-word-slugs";
-import prisma from "@/lib/db";
+import {prisma} from "@/lib/db";
 import {
   createTRPCRouter,
   premiumProcedure,
