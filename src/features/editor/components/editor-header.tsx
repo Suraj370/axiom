@@ -18,7 +18,6 @@ import {
   useSuspenseWorkflow,
   useUpdateWorkflowName,
 } from "@/features/workflows/hooks/use-workflows";
-import { is } from "date-fns/locale";
 
 export const EditorSaveButton = ({ workflowId }: { workflowId: string }) => {
   return (
