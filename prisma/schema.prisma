@@ -75,7 +75,11 @@ model Verification {
   @@map("verification")
 }
 
-
+enum NodeType {
+  INITIAL
+  MANUAL_TRIGGER
+  HTTP_REQUEST
+}
 model Workflow{
   id          String   @id @default(cuid())
   name        String
@@ -92,9 +96,7 @@ model Workflow{
  
 }
 
-enum NodeType{
-  INITIAL
-}
+
 model Node{
   id          String   @id @default(cuid())
   workflowId  String
