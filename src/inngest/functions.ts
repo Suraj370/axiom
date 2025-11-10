@@ -1,54 +1,53 @@
 import { NonRetriableError } from "inngest";
-import { inngest } from "./client";
-import { prisma } from "@/lib/db";
-import { topologicalSort } from "./utils";
-import { NodeType } from "@/generated/prisma";
 import { getExecutor } from "@/features/executions/lib/executor-registry";
-
-
-
+import type { NodeType } from "@/generated/prisma";
+import { prisma } from "@/lib/db";
+import { httpRequestChannel } from "./channels/http-request";
+import { inngest } from "./client";
+import { topologicalSort } from "./utils";
+import { manualTriggerChannel } from "./channels/manual-trigger";
 
 export const executeWorkflow = inngest.createFunction(
-  { id: "execute-ai" },
-  { event: "workflows/execute.workflow" },
-  async ({ event, step }) => {
-
+  {
+    id: "execute-workflow",
+    retries: 0, //TODO: Remove in Production
+  },
+  { event: "workflows/execute.workflow", channels: [httpRequestChannel(), manualTriggerChannel()] },
+  async ({ event, step, publish }) => {
     const workflowId = event.data.workflowId;
 
-    if(!workflowId){
-      throw new NonRetriableError("Workflow Id is missing")
+    if (!workflowId) {
+      throw new NonRetriableError("Workflow Id is missing");
     }
-    
-    const sortedNodes = await step.run("prepare-workflow", async() => {
+
+    const sortedNodes = await step.run("prepare-workflow", async () => {
       const workflow = await prisma.workflow.findUniqueOrThrow({
-        where: {id: workflowId},
+        where: { id: workflowId },
         include: {
           node: true,
-          connection: true
-        }
+          connection: true,
+        },
       });
       return topologicalSort(workflow.node, workflow.connection);
-
-    })
+    });
 
     // Initialize the context with any initial data from the trigger
     let context = event.data.initialData || {};
 
-    for(const node of sortedNodes){
+    for (const node of sortedNodes) {
       const executor = getExecutor(node.type as NodeType);
       context = await executor({
         data: node.data as Record<string, unknown>,
         nodeId: node.id,
         context,
-        step
-      })
+        step,
+        publish,
+      });
     }
-
 
     return {
       workflowId,
       result: context,
-      
     };
   }
 );
