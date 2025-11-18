@@ -8,7 +8,6 @@ import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -45,6 +44,27 @@ const executionNodes: NodeTypeOption[] = [
     label: "HTTP Request",
     description: "Makes an HTTP request",
     icon: GlobeIcon,
+  },
+  {
+    // TypeScript Error: Property 'icon' is missing in type '{ type: "HTTP_REQUEST"; label: "HTTP Request"; description: string; }' but required in type 'NodeTypeOption'.
+    type: NodeType.GEMINI,
+    label: "Gemini",
+    description: "Use Google Gemini to generate text",
+    icon: "/gemini.svg",
+  },
+  {
+    // TypeScript Error: Property 'icon' is missing in type '{ type: "HTTP_REQUEST"; label: "HTTP Request"; description: string; }' but required in type 'NodeTypeOption'.
+    type: NodeType.OPENAI,
+    label: "OpenAI",
+    description: "Use OpenAI to generate text",
+    icon: "/openai.svg",
+  },
+  {
+    // TypeScript Error: Property 'icon' is missing in type '{ type: "HTTP_REQUEST"; label: "HTTP Request"; description: string; }' but required in type 'NodeTypeOption'.
+    type: NodeType.ANTHROPIC,
+    label: "Anthropic",
+    description: "Use Anthropic to generate text",
+    icon: "/anthropic.svg",
   },
 ];
 
