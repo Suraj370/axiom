@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import Image from "next/image";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
@@ -31,12 +32,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { useCredentialByType } from "@/features/credentials/hooks/use-credentials";
+import { CredentialType } from "@/generated/prisma";
 
-export const AVAILABLE_MODES = [
-
-  "gemini-2.5-pro",
-  "gemini-2.5-flash",
-] as const;
+export const AVAILABLE_MODES = ["gemini-2.5-pro", "gemini-2.5-flash"] as const;
 
 const formSchema = z.object({
   variableName: z
@@ -46,6 +45,7 @@ const formSchema = z.object({
       message:
         "Variable name must start with a letter or underscore and contain only letters, numbers, and underscores",
     }),
+  credentialId: z.string().min(1, "Credential is required"),
   model: z.string().min(1, "Model is required"),
   systemPrompt: z.string().optional(),
   userPrompt: z.string().min(1, "User prompt is required"),
@@ -66,9 +66,12 @@ export const GeminiDialog = ({
   onSubmit,
   defaultValues = {},
 }: Props) => {
+  const { data: credentials, isLoading: isLoadingCredentials } =
+    useCredentialByType(CredentialType.GEMINI);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      credentialId: defaultValues.credentialId || "",
       variableName: defaultValues.variableName || "",
       model: defaultValues.model || AVAILABLE_MODES[0],
       systemPrompt: defaultValues.systemPrompt || "",
@@ -81,19 +84,14 @@ export const GeminiDialog = ({
     if (open) {
       form.reset({
         variableName: defaultValues.variableName || "",
+        credentialId: defaultValues.credentialId || "",
+
         model: defaultValues.model || AVAILABLE_MODES[0],
         systemPrompt: defaultValues.systemPrompt || "",
         userPrompt: defaultValues.userPrompt || "",
       });
     }
-  }, [
-    open,
-    defaultValues.variableName,
-    defaultValues.model,
-    defaultValues.systemPrompt,
-    defaultValues.userPrompt,
-    form,
-  ]);
+  }, [open, defaultValues, form]);
 
   const watchVariableName = form.watch("variableName") || "myGemini";
 
@@ -137,6 +135,44 @@ export const GeminiDialog = ({
 
             <FormField
               control={form.control}
+              name="credentialId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel> Gemini Credential </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={isLoadingCredentials || !credentials?.length}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a credential" />
+                      </SelectTrigger>
+                    </FormControl>
+
+                    <SelectContent>
+                      {credentials?.map((credential) => (
+                        <SelectItem key={credential.id} value={credential.id}>
+                          <div className="flex items-center gap-2">
+                            <Image
+                              src="/gemini.svg"
+                              alt="gemini"
+                              width={16}
+                              height={16}
+                            />
+                            {credential.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="model"
               render={({ field }) => (
                 <FormItem>
@@ -168,8 +204,6 @@ export const GeminiDialog = ({
                 </FormItem>
               )}
             />
-
-         
 
             <FormField
               control={form.control}

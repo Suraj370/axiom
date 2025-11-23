@@ -7,7 +7,6 @@ import {
   WorkflowsLoading,
 } from "@/features/workflows/components/workflows";
 import { ErrorBoundary } from "react-error-boundary";
-import { Edit } from "lucide-react";
 import {
   Editor,
   EditorError,

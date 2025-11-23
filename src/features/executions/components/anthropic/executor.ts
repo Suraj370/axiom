@@ -6,6 +6,7 @@ import ky, { type Options as KyOptions } from "ky";
 import type { NodeExecutor } from "@/features/executions/types";
 import { AnthropicChannel } from "@/inngest/channels/anthropic";
 import { geminiChannel } from "@/inngest/channels/gemini";
+import { prisma } from "@/lib/db";
 
 Handlebars.registerHelper("json", (context) => {
   const stringified = JSON.stringify(context, null, 2);
@@ -16,6 +17,7 @@ Handlebars.registerHelper("json", (context) => {
 
 type AnthropicData = {
   variableName?: string;
+  credentialId?: string;
   model?: string;
   systemPrompt?: string;
   userPrompt?: string;
@@ -55,7 +57,15 @@ export const AnthropicExecutor: NodeExecutor<AnthropicData> = async ({
     throw new NonRetriableError("Anthropic Node: User prompt is missing");
   }
 
-  // TODO: throw if credential is missing
+  if (!data.credentialId) {
+    await publish(
+      AnthropicChannel().status({
+        nodeId,
+        status: "error",
+      })
+    );
+    throw new NonRetriableError("Anthropic Node: Credential is missing");
+  }
 
   const systemPrompt = data.systemPrompt
     ? Handlebars.compile(data.systemPrompt)(context)
@@ -63,11 +73,20 @@ export const AnthropicExecutor: NodeExecutor<AnthropicData> = async ({
 
   const userPrompt = Handlebars.compile(data.userPrompt)(context);
 
-  // TODO: Fecth credential that user selected
+  const credential = await step.run("get-credential", () => {
+    return prisma.credential.findUnique({
+      where: {
+        id: data.credentialId,
+      },
+    });
+  });
 
-  const credentialValue = process.env.Anthropic_API_KEY!;
+  if (!credential) {
+    throw new NonRetriableError("Anthropic Node: Credential not found");
+  }
+
   const Anthropic = createAnthropic({
-    apiKey: credentialValue,
+    apiKey: credential.value,
   });
 
   try {

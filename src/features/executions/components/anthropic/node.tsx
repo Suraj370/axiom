@@ -2,15 +2,16 @@
 
 import { type Node, type NodeProps, useReactFlow } from "@xyflow/react";
 import { memo, useState } from "react";
+import { Anthropic_CHANNEL_NAME } from "@/inngest/channels/anthropic";
 import { OpenAI_CHANNEL_NAME } from "@/inngest/channels/openai";
 import { useNodeStatus } from "../../hooks/use-node-status";
 import { BaseExecutionNode } from "../base-execution-node";
 import { fetchAnthropicRealtimeToken } from "./actions";
 import { AnthropicDialog, type AnthropicFormValues } from "./dialog";
-import { Anthropic_CHANNEL_NAME } from "@/inngest/channels/anthropic";
 
 type AnthropicNodeData = {
   variableName: string;
+  credentialId?: string;
   model?: string;
   systemPrompt?: string;
   userPrompt?: string;
