@@ -6,6 +6,7 @@ import ky, { type Options as KyOptions } from "ky";
 import type { NodeExecutor } from "@/features/executions/types";
 import { geminiChannel } from "@/inngest/channels/gemini";
 import { openaiChannel } from "@/inngest/channels/openai";
+import { prisma } from "@/lib/db";
 
 Handlebars.registerHelper("json", (context) => {
   const stringified = JSON.stringify(context, null, 2);
@@ -17,6 +18,8 @@ Handlebars.registerHelper("json", (context) => {
 type OpenAIData = {
   variableName?: string;
   model?: string;
+  credentialId?: string;
+
   systemPrompt?: string;
   userPrompt?: string;
 };
@@ -55,7 +58,15 @@ export const OpenAIExecutor: NodeExecutor<OpenAIData> = async ({
     throw new NonRetriableError("OpenAI Node: User prompt is missing");
   }
 
-  // TODO: throw if credential is missing
+  if (!data.credentialId) {
+    await publish(
+      openaiChannel().status({
+        nodeId,
+        status: "error",
+      })
+    );
+    throw new NonRetriableError("OpenAI Node:  Credential is missing");
+  }
 
   const systemPrompt = data.systemPrompt
     ? Handlebars.compile(data.systemPrompt)(context)
@@ -63,11 +74,19 @@ export const OpenAIExecutor: NodeExecutor<OpenAIData> = async ({
 
   const userPrompt = Handlebars.compile(data.userPrompt)(context);
 
-  // TODO: Fecth credential that user selected
+  const credential = await step.run("get-credential", () => {
+    return prisma.credential.findUnique({
+      where: {
+        id: data.credentialId,
+      },
+    });
+  });
 
-  const credentialValue = process.env.OPENAI_API_KEY!;
+  if (!credential) {
+    throw new NonRetriableError("Anthropic node: Credential not found");
+  }
   const openai = createOpenAI({
-    apiKey: credentialValue,
+    apiKey: credential.value,
   });
 
   try {
