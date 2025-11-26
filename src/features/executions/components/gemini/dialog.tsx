@@ -101,160 +101,153 @@ export const GeminiDialog = ({
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Gemini Configuration</DialogTitle>
-          <DialogDescription>
-            Configure the AI model and prompt for this node
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-h-[90vh] flex flex-col p-0">
+        {/* HEADER — stays fixed */}
+        <div className="border-b px-6 py-4">
+          <DialogHeader>
+            <DialogTitle>Gemini Configuration</DialogTitle>
+            <DialogDescription>
+              Configure the AI model and prompt for this node
+            </DialogDescription>
+          </DialogHeader>
+        </div>
+
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-8 mt-4"
+            className="flex flex-col flex-1 overflow-hidden"
           >
-            <FormField
-              control={form.control}
-              name="variableName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Variable Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="myGemini" {...field} />
-                  </FormControl>
-
-                  <FormDescription>
-                    Use names to reference the result in other nodes:{" "}
-                    {`{{${watchVariableName}.aiResponse}}`}
-                  </FormDescription>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="credentialId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel> Gemini Credential </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isLoadingCredentials || !credentials?.length}
-                  >
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-8">
+              <FormField
+                control={form.control}
+                name="variableName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Variable Name</FormLabel>
                     <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a credential" />
-                      </SelectTrigger>
+                      <Input placeholder="myGemini" {...field} />
                     </FormControl>
-
-                    <SelectContent>
-                      {credentials?.map((credential) => (
-                        <SelectItem key={credential.id} value={credential.id}>
-                          <div className="flex items-center gap-2">
-                            <Image
-                              src="/gemini.svg"
-                              alt="gemini"
-                              width={16}
-                              height={16}
-                            />
-                            {credential.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="model"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Model</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                    <FormDescription>
+                      Use names to reference the result in other nodes:{" "}
+                      {`{{${watchVariableName}.aiResponse}}`}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="credentialId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel> Gemini Credential </FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isLoadingCredentials || !credentials?.length}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a credential" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {credentials?.map((credential) => (
+                          <SelectItem key={credential.id} value={credential.id}>
+                            <div className="flex items-center gap-2">
+                              <Image
+                                src="/gemini.svg"
+                                alt="gemini"
+                                width={16}
+                                height={16}
+                              />
+                              {credential.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="model"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Model</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select a model" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {AVAILABLE_MODES.map((model) => (
+                          <SelectItem key={model} value={model}>
+                            {model}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      The Google Gemini model to use for completion
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="systemPrompt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>System Prompt (Optional)</FormLabel>
                     <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a model" />
-                      </SelectTrigger>
+                      <Textarea
+                        placeholder={`You are a helpful assistant`}
+                        {...field}
+                        className="min-h-[80px] font-mono text-sm"
+                      />
                     </FormControl>
+                    <FormDescription>
+                      Sets the behaviour of the assistant. Use {"{{variable}}"}{" "}
+                      for simple values or {"{{json variable}}"} to stringify
+                      objects
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="userPrompt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>User Prompt(Optional)</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder={`Sumnmarize this text: {{json.httpResponse.data}}`}
+                        {...field}
+                        className="min-h-[80px] font-mono text-sm"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Sets the behaviour of the assistant. Use {"{{variable}}"}{" "}
+                      for simple values or {"{{json variable}}"} to stringify
+                      objects
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
-                    <SelectContent>
-                      {AVAILABLE_MODES.map((model) => (
-                        <SelectItem key={model} value={model}>
-                          {model}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-
-                  <FormDescription>
-                    The Google Gemini model to use for completion
-                  </FormDescription>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="systemPrompt"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>System Prompt (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={`You are a helpful assistant`}
-                      {...field}
-                      className="min-h-[80px] font-mono text-sm"
-                    />
-                  </FormControl>
-
-                  <FormDescription>
-                    Sets the behaviour of the assistant. Use {"{{variable}}"}{" "}
-                    for simple values or {"{{json variable}}"} to stringify
-                    objects
-                  </FormDescription>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="userPrompt"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>User Prompt(Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={`Sumnmarize this text: {{json.httpResponse.data}}`}
-                      {...field}
-                      className="min-h-[80px] font-mono text-sm"
-                    />
-                  </FormControl>
-
-                  <FormDescription>
-                    Sets the behaviour of the assistant. Use {"{{variable}}"}{" "}
-                    for simple values or {"{{json variable}}"} to stringify
-                    objects
-                  </FormDescription>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <DialogFooter className="mt-4">
+            <DialogFooter className=" px-6 py-4 flex-shrink-0 bg-background">
               <Button type="submit">Save</Button>
             </DialogFooter>
           </form>
