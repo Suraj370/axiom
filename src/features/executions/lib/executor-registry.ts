@@ -6,6 +6,7 @@ import { geminiExecutor } from "../components/gemini/executor";
 import { httpRequestExecutor } from "../components/http-request/executor";
 import { OpenAIExecutor } from "../components/openai/executor";
 import type { NodeExecutor } from "../types";
+import { discordExecutor } from "../components/discord/executor";
 
 export const executorRegistry: Partial<Record<NodeType, NodeExecutor>> = {
   [NodeType.INITIAL]: manualTriggerExecutor,
@@ -15,6 +16,7 @@ export const executorRegistry: Partial<Record<NodeType, NodeExecutor>> = {
   [NodeType.GEMINI]: geminiExecutor,
   [NodeType.OPENAI]: OpenAIExecutor,
   [NodeType.ANTHROPIC]: AnthropicExecutor,
+  [NodeType.DISCORD]: discordExecutor,
 };
 
 export const getExecutor = (type: NodeType): NodeExecutor => {

@@ -66,6 +66,13 @@ const executionNodes: NodeTypeOption[] = [
     description: "Use Anthropic to generate text",
     icon: "/anthropic.svg",
   },
+    {
+    // TypeScript Error: Property 'icon' is missing in type '{ type: "HTTP_REQUEST"; label: "HTTP Request"; description: string; }' but required in type 'NodeTypeOption'.
+    type: NodeType.DISCORD,
+    label: "Discord",
+    description: "Send a message to discord",
+    icon: "/discord.svg",
+  },
 ];
 
 interface NodeSelectorProps {

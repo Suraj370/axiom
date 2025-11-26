@@ -4,7 +4,7 @@ import Handlebars from "handlebars";
 import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions } from "ky";
 import type { NodeExecutor } from "@/features/executions/types";
-import { AnthropicChannel } from "@/inngest/channels/anthropic";
+import { anthropicChannel } from "@/inngest/channels/anthropic";
 import { geminiChannel } from "@/inngest/channels/gemini";
 import { prisma } from "@/lib/db";
 
@@ -26,12 +26,13 @@ type AnthropicData = {
 export const AnthropicExecutor: NodeExecutor<AnthropicData> = async ({
   data,
   nodeId,
+  userId,
   context,
   step,
   publish,
 }) => {
   await publish(
-    AnthropicChannel().status({
+    anthropicChannel().status({
       nodeId,
       status: "loading",
     })
@@ -49,7 +50,7 @@ export const AnthropicExecutor: NodeExecutor<AnthropicData> = async ({
 
   if (!data.userPrompt) {
     await publish(
-      AnthropicChannel().status({
+      anthropicChannel().status({
         nodeId,
         status: "error",
       })
@@ -59,7 +60,7 @@ export const AnthropicExecutor: NodeExecutor<AnthropicData> = async ({
 
   if (!data.credentialId) {
     await publish(
-      AnthropicChannel().status({
+      anthropicChannel().status({
         nodeId,
         status: "error",
       })
@@ -77,6 +78,7 @@ export const AnthropicExecutor: NodeExecutor<AnthropicData> = async ({
     return prisma.credential.findUnique({
       where: {
         id: data.credentialId,
+        userId,
       },
     });
   });
@@ -109,7 +111,7 @@ export const AnthropicExecutor: NodeExecutor<AnthropicData> = async ({
       steps[0].content[0].type === "text" ? steps[0].content[0].text : "";
 
     await publish(
-      AnthropicChannel().status({
+      anthropicChannel().status({
         nodeId,
         status: "success",
       })
@@ -123,7 +125,7 @@ export const AnthropicExecutor: NodeExecutor<AnthropicData> = async ({
     };
   } catch (error) {
     await publish(
-      AnthropicChannel().status({
+      anthropicChannel().status({
         nodeId,
         status: "error",
       })
