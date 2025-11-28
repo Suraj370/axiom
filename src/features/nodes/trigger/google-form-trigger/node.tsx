@@ -2,7 +2,7 @@ import type { NodeProps } from "@xyflow/react";
 import { memo, useState } from "react";
 import { useNodeStatus } from "@/features/executions/hooks/use-node-status";
 import { Google_FORM_TRIGGER_CHANNEL_NAME } from "@/inngest/channels/google-form-trigger";
-import { BaseTriggerNode } from "../base-trigger-node";
+import { BaseTriggerNode } from "../../../triggers/components/base-trigger-node";
 import { fetchGoogleFormRealtimeToken } from "./actions";
 import { GoogleFormTriggerDialog } from "./dialog";
 

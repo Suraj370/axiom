@@ -4,7 +4,6 @@ import Handlebars from "handlebars";
 import { NonRetriableError } from "inngest";
 import ky, { type Options as KyOptions } from "ky";
 import type { NodeExecutor } from "@/features/executions/types";
-import { geminiChannel } from "@/inngest/channels/gemini";
 import { openaiChannel } from "@/inngest/channels/openai";
 import { prisma } from "@/lib/db";
 
