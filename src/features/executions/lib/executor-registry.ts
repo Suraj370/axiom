@@ -1,12 +1,12 @@
-import { googleFormTriggerrExecutor } from "@/features/triggers/components/google-form-trigger/executor";
-import { manualTriggerExecutor } from "@/features/triggers/components/manual-trigger/executor";
+import { googleFormTriggerrExecutor } from "@/features/nodes/trigger/google-form-trigger/executor";
+import { manualTriggerExecutor } from "@/features/nodes/trigger/manual-trigger/executor";
 import { NodeType } from "@/generated/prisma";
-import { AnthropicExecutor } from "../components/anthropic/executor";
-import { geminiExecutor } from "../components/gemini/executor";
-import { httpRequestExecutor } from "../components/http-request/executor";
-import { OpenAIExecutor } from "../components/openai/executor";
+import { AnthropicExecutor } from "../../nodes/executions/anthropic/executor";
+import { discordExecutor } from "../../nodes/executions/discord/executor";
+import { geminiExecutor } from "../../nodes/executions/gemini/executor";
+import { httpRequestExecutor } from "../../nodes/executions/http-request/executor";
+import { OpenAIExecutor } from "../../nodes/executions/openai/executor";
 import type { NodeExecutor } from "../types";
-import { discordExecutor } from "../components/discord/executor";
 
 export const executorRegistry: Partial<Record<NodeType, NodeExecutor>> = {
   [NodeType.INITIAL]: manualTriggerExecutor,
