@@ -3,13 +3,19 @@ import { PAGINATION } from "@/constants/pagination";
 import { CredentialType } from "@/generated/prisma";
 import { prisma } from "@/lib/db";
 import {
+  upsertCredentialSecret,
+  deleteCredentialSecret,
+  getCredentialSecret,
+  parseSecretString,
+} from "@/lib/secrets";
+import {
   createTRPCRouter,
   premiumProcedure,
   protectedProcedure,
 } from "@/trpc/init";
 
 /* ----------------------------- */
-/* 📌 Types & Schemas Section    */
+/* 📌 Schemas                    */
 /* ----------------------------- */
 
 const idSchema = z.object({ id: z.string() });
@@ -27,11 +33,6 @@ const updateSchema = z.object({
   value: z.string().min(1, "Value is required"),
 });
 
-const updateNameSchema = z.object({
-  id: z.string(),
-  name: z.string().min(1),
-});
-
 const paginationSchema = z.object({
   page: z.number().min(1).default(PAGINATION.DEFAULT_PAGE),
   pageSize: z
@@ -47,62 +48,111 @@ const typeSchema = z.object({
 });
 
 /* ----------------------------- */
-/* 📌 Type Inference Section     */
-/* ----------------------------- */
-
-export type IdInput = z.infer<typeof idSchema>;
-export type CreateInput = z.infer<typeof createSchema>;
-export type UpdateInput = z.infer<typeof updateSchema>;
-export type UpdateNameInput = z.infer<typeof updateNameSchema>;
-export type PaginationInput = z.infer<typeof paginationSchema>;
-
-/* ----------------------------- */
-/* 📌 Router Section             */
+/* 📌 Router                     */
 /* ----------------------------- */
 
 export const credentialsRouter = createTRPCRouter({
-  create: premiumProcedure.input(createSchema).mutation(({ ctx, input }) =>
-    prisma.credential.create({
-      data: {
-        ...input,
-        userId: ctx.auth.user.id,
-        // TODO: encrypt value in production
-      },
-    })
-  ),
+  // CREATE: DB row + secret in AWS
+  create: premiumProcedure
+    .input(createSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { name, value, type } = input;
+      const userId = ctx.auth.user.id;
 
-  remove: protectedProcedure.input(idSchema).mutation(({ ctx, input }) =>
-    prisma.credential.delete({
-      where: { id: input.id, userId: ctx.auth.user.id },
-    })
-  ),
+      return prisma.$transaction(async (tx) => {
+        // 1) Create credential to get ID
+        const credential = await tx.credential.create({
+          data: {
+            name,
+            userId,
+            type,
+            secretId: "", // temporary placeholder
+          },
+        });
 
-  update: protectedProcedure.input(updateSchema).mutation(({ ctx, input }) =>
-    prisma.credential.update({
-      where: { id: input.id, userId: ctx.auth.user.id },
-      data: {
-        name: input.name,
-        type: input.type,
-        value: input.value,
-      },
-    })
-  ),
+        const secretName = `credentials/${userId}/${name}`;
 
-  getOne: protectedProcedure.input(idSchema).query(({ ctx, input }) =>
-    prisma.credential.findUniqueOrThrow({
-      where: { id: input.id, userId: ctx.auth.user.id },
-    })
-  ),
+        await upsertCredentialSecret(secretName, { value });
+
+        const updated = await tx.credential.update({
+          where: { id: credential.id },
+          data: { secretId: secretName },
+        });
+
+        return { ...updated, value };
+      });
+    }),
+
+  remove: protectedProcedure
+    .input(idSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.auth.user.id;
+
+      return prisma.$transaction(async (tx) => {
+        const credential = await tx.credential.findFirstOrThrow({
+          where: { id: input.id, userId },
+        });
+
+        const deleted = await tx.credential.delete({
+          where: { id: credential.id },
+        });
+
+        await deleteCredentialSecret(credential.secretId);
+        return deleted;
+      });
+    }),
+
+  // UPDATE: metadata + secret value in AWS
+  update: protectedProcedure
+    .input(updateSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.auth.user.id;
+      const { id, name, type, value } = input;
+
+      return prisma.$transaction(async (tx) => {
+        const existing = await tx.credential.findFirstOrThrow({
+          where: { id, userId },
+        });
+
+        // 1) Update encrypted value in AWS
+        await upsertCredentialSecret(existing.secretId, { value });
+
+        // 2) Update metadata in DB
+        const updated = await tx.credential.update({
+          where: { id },
+          data: { name, type },
+        });
+
+        return { ...updated, value };
+      });
+    }),
+
+  getOne: protectedProcedure.input(idSchema).query(async ({ ctx, input }) => {
+    const userId = ctx.auth.user.id;
+
+    const credential = await prisma.credential.findFirstOrThrow({
+      where: { id: input.id, userId },
+    });
+
+    const secretOutput = await getCredentialSecret(credential.secretId);
+
+    const parsed = parseSecretString<{ value: string }>(secretOutput);
+    const value = parsed?.value ?? null;
+
+
+    return { ...credential, value };
+  }),
 
   getMany: protectedProcedure
     .input(paginationSchema)
     .query(async ({ ctx, input }) => {
       const { page, pageSize, search } = input;
+      const userId = ctx.auth.user.id;
 
       const [items, totalCount] = await Promise.all([
         prisma.credential.findMany({
           where: {
-            userId: ctx.auth.user.id,
+            userId,
             name: search
               ? { contains: search, mode: "insensitive" }
               : undefined,
@@ -113,7 +163,7 @@ export const credentialsRouter = createTRPCRouter({
         }),
         prisma.credential.count({
           where: {
-            userId: ctx.auth.user.id,
+            userId,
             name: search
               ? { contains: search, mode: "insensitive" }
               : undefined,
@@ -124,7 +174,7 @@ export const credentialsRouter = createTRPCRouter({
       const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
       return {
-        items,
+        items, // 🔐 no secret values here
         pagination: {
           page,
           pageSize,
@@ -136,16 +186,11 @@ export const credentialsRouter = createTRPCRouter({
       };
     }),
 
-  getType: protectedProcedure
-    .input(typeSchema)
-    .query(async ({ ctx, input }) => {
-      const { type } = input;
-
-      return await prisma.credential.findMany({
-        where: { type, userId: ctx.auth.user.id },
-        orderBy: {
-          updatedAt: "desc",
-        },
-      });
-    }),
+  // FILTER BY TYPE: metadata only
+  getType: protectedProcedure.input(typeSchema).query(({ ctx, input }) =>
+    prisma.credential.findMany({
+      where: { type: input.type, userId: ctx.auth.user.id },
+      orderBy: { updatedAt: "desc" },
+    })
+  ),
 });
