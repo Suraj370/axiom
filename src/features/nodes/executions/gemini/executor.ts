@@ -6,6 +6,7 @@ import ky, { type Options as KyOptions } from "ky";
 import type { NodeExecutor } from "@/features/executions/types";
 import { geminiChannel } from "@/inngest/channels/gemini";
 import { prisma } from "@/lib/db";
+import { getCredentialSecret, parseSecretString } from "@/lib/secrets";
 
 Handlebars.registerHelper("json", (context) => {
   const stringified = JSON.stringify(context, null, 2);
@@ -57,7 +58,7 @@ export const geminiExecutor: NodeExecutor<GeminiData> = async ({
     throw new NonRetriableError("Gemini Node: User prompt is missing");
   }
 
-    if (!data.credentialId) {
+  if (!data.credentialId) {
     await publish(
       geminiChannel().status({
         nodeId,
@@ -67,8 +68,6 @@ export const geminiExecutor: NodeExecutor<GeminiData> = async ({
     throw new NonRetriableError("Gemini Node: Credential is missing");
   }
 
- 
-
   const systemPrompt = data.systemPrompt
     ? Handlebars.compile(data.systemPrompt)(context)
     : "You are a helpful assistant";
@@ -77,19 +76,29 @@ export const geminiExecutor: NodeExecutor<GeminiData> = async ({
 
   const credential = await step.run("get-credential", () => {
     return prisma.credential.findUnique({
-      where:{
+      where: {
         id: data.credentialId,
-        userId
-      }
-    })
-  })
+        userId,
+      },
+    });
+  });
 
-  if(!credential){
-    throw new NonRetriableError("Gemini node: Credential not found")
+  if (!credential) {
+    throw new NonRetriableError("Gemini node: Credential not found");
   }
 
+  const secretResponse = await step.run("get-api-key-from-aws", () => {
+    return getCredentialSecret(credential.secretId);
+  });
+
+  const secretValue = parseSecretString<{ apiKey: string }>(
+    secretResponse as any
+  );
+
+  
+
   const google = createGoogleGenerativeAI({
-    apiKey: credential.value,
+    apiKey: secretValue?.apiKey,
   });
 
   try {

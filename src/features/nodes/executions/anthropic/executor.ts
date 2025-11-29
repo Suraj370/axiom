@@ -7,6 +7,7 @@ import type { NodeExecutor } from "@/features/executions/types";
 import { anthropicChannel } from "@/inngest/channels/anthropic";
 import { geminiChannel } from "@/inngest/channels/gemini";
 import { prisma } from "@/lib/db";
+import { getCredentialSecret, parseSecretString } from "@/lib/secrets";
 
 Handlebars.registerHelper("json", (context) => {
   const stringified = JSON.stringify(context, null, 2);
@@ -87,8 +88,16 @@ export const AnthropicExecutor: NodeExecutor<AnthropicData> = async ({
     throw new NonRetriableError("Anthropic Node: Credential not found");
   }
 
+  const secretResponse = await step.run("get-api-key-from-aws", () => {
+    return getCredentialSecret(credential.secretId);
+  });
+
+  const secretValue = parseSecretString<{ apiKey: string }>(
+    secretResponse as any
+  );
+
   const Anthropic = createAnthropic({
-    apiKey: credential.value,
+    apiKey: secretValue?.apiKey,
   });
 
   try {

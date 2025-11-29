@@ -6,6 +6,7 @@ import ky, { type Options as KyOptions } from "ky";
 import type { NodeExecutor } from "@/features/executions/types";
 import { openaiChannel } from "@/inngest/channels/openai";
 import { prisma } from "@/lib/db";
+import { getCredentialSecret, parseSecretString } from "@/lib/secrets";
 
 Handlebars.registerHelper("json", (context) => {
   const stringified = JSON.stringify(context, null, 2);
@@ -86,8 +87,17 @@ export const OpenAIExecutor: NodeExecutor<OpenAIData> = async ({
   if (!credential) {
     throw new NonRetriableError("Anthropic node: Credential not found");
   }
+
+  const secretResponse = await step.run("get-api-key-from-aws", () => {
+    return getCredentialSecret(credential.secretId);
+  });
+
+  const secretValue = parseSecretString<{ apiKey: string }>(
+    secretResponse as any
+  );
+
   const openai = createOpenAI({
-    apiKey: credential.value,
+    apiKey: secretValue?.apiKey,
   });
 
   try {

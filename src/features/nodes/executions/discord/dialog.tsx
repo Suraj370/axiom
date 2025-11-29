@@ -144,7 +144,7 @@ export const DiscordDialog = ({
               name="content"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>System Prompt (Optional)</FormLabel>
+                  <FormLabel>Content</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder={`Summary: {{myGemini.text}}`}
