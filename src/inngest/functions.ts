@@ -15,7 +15,7 @@ import { topologicalSort } from "./utils";
 export const executeWorkflow = inngest.createFunction(
   {
     id: "execute-workflow",
-    retries: 0, //TODO: Remove in Production
+    retries: process.env.NODE_ENV === "production" ? 2 : 0,
     onFailure: async ({ event, step }) => {
       return prisma.execution.update({
         where: { inngestEventId: event.data.event.id },
