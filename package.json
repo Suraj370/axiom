@@ -8,7 +8,8 @@
     "start": "next start",
     "ngrok:dev": " ngrok http --url=nonasbestine-plausibly-renata.ngrok-free.dev 3000",
     "lint": "biome check",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.33",
