@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Axiom ⚡️
 
-## Getting Started
+**The OS for your Backend Logic.**
 
-First, run the development server:
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Blue)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2d3748)](https://www.prisma.io/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38bdf8)](https://tailwindcss.com/)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Axiom is a powerful, visual workflow automation builder that allows you to chain together AI models, databases, and APIs without writing boilerplate code. Whether you are building complex RAG pipelines, simple cron jobs, or autonomous AI agents, Axiom provides the infrastructure to build, deploy, and monitor them visually.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[**View Live Demo**](https://axiom-sage.vercel.app)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+![Axiom Workflow Canvas](https://axiom-sage.vercel.app/_next/image?url=%2Fworkflow-canvas.png&w=3840&q=75)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ✨ Features
 
-## Learn More
+- **🎨 Visual Infinite Canvas**: Drag, drop, and connect nodes to build complex logic flows in seconds.
+- **🤖 AI-First Integrations**: Native support for **Gemini**, OpenAI, and other LLMs to build intelligent agents.
+- **🔐 Secure Credential Vault**: Bank-grade security for your API keys. Never hardcode secrets again; manage them centrally.
+- **📊 Real-time Observability**:
+  - Track every execution with precision timing.
+  - **Sequential Logging**: Inspect logs with sequential IDs and timestamps for easy debugging.
+  - Deep-dive into JSON payloads for total transparency.
+- **🔌 Diverse Nodes**: Connect Discord, Databases, Custom APIs, and more.
+- **⚡️ Instant Deployment**: Push your workflows to production immediately without managing infrastructure.
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠️ Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Framework**: [Next.js](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Database**: [PostgreSQL](https://www.postgresql.org/) (via [Prisma ORM](https://www.prisma.io/))
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/)
+- **Linting**: [Biome](https://biomejs.dev/)
+- **Monitoring**: [Sentry](https://sentry.io/)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🚀 Getting Started
 
-## Deploy on Vercel
+Follow these steps to run Axiom locally on your machine.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Prerequisites
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Node.js 18+
+- npm, yarn, or pnpm
+- A PostgreSQL database (or a local instance)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone [https://github.com/Suraj370/axiom.git](https://github.com/Suraj370/axiom.git)
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   pnpm install
+   ```
+
+3. Set up Environment Variables Create a .env file in the root directory and add your database connection string and other keys:
+   ```bash
+   DATABASE_URL="postgresql://user:password@localhost:5432/axiom_db"
+   # Add other keys as required (e.g., Clerk/Auth, API Keys)
+   NEXT_PUBLIC_APP_URL="http://localhost:3000"
+   ```
+4. Initialize the Database Push the Prisma schema to your database:
+   ```bash
+   npx prisma db push
+   ```
+5. Run the Development Server
+
+### 📂 Project Structure
+ 
+   ```bash
+  axiom/
+├── app/                # Next.js App Router pages and layouts
+├── components/         # Reusable UI components
+├── prisma/            
+│   └── schema.prisma   # Database schema
+├── public/             # Static assets
+├── lib/                # Utility functions and shared logic
+├── next.config.ts      # Next.js configuration
+├── biome.json          # Linter configuration
+└── ...
+   ```
+### 🤝 Contributing
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+Fork the project
+
+Create your feature branch (git checkout -b feature/AmazingFeature)
+
+Commit your changes (git commit -m 'Add some AmazingFeature')
+
+Push to the branch (git push origin feature/AmazingFeature)
+
+Open a Pull Request
+
